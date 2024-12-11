@@ -1,8 +1,10 @@
 ﻿
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using trabalho.Models;
+using trabalho.Requests;
 
 namespace trabalho.Controllers
 {
@@ -12,33 +14,25 @@ namespace trabalho.Controllers
     {
         private static List<ModeloLivros> livros = new List<ModeloLivros>()
         {
-               new ModeloLivros{Id=1, autor ="Dom Casmurro",Titulo="Machado de Assis", quantidade=2, ano = 1899},
-                new ModeloLivros{Id=2,autor ="Memórias Póstumas de Brás Cubas",Titulo="Machado de Assis", quantidade=2, ano= 1881},
-               new ModeloLivros{Id=3,autor ="João Guimarães Rosa",Titulo="Grande Sertão: Veredas", quantidade=4,ano= 1956},
-               new ModeloLivros{Id=4,autor ="Aluísio Azevedo",Titulo="O Cortiço", quantidade=4, ano= 1890},
-               new ModeloLivros{Id=5,autor ="José de Alencar",Titulo="Iracema", quantidade=1, ano =1865},
-               new ModeloLivros{Id=6,autor ="Mário de Andrade",Titulo="Macunaíma", quantidade=11, ano=1928},
-               new ModeloLivros{Id=7,autor ="Jorge Amado",Titulo="Capitães da Areia", quantidade=2, ano = 1937},
-               new ModeloLivros{Id=8,autor ="Graciliano Ramos",Titulo="Vidas Secas", quantidade=9, ano=1938},
-               new ModeloLivros{Id=9,autor ="Joaquim Manuel de Macedo",Titulo="A Moreninha", quantidade=2, ano=1844},
-               new ModeloLivros{Id=10,autor ="Erico Verissimo",Titulo="O Tempo e o Vento", quantidade=1, ano =1949},
-               new ModeloLivros{Id=11,autor ="Clarice Lispector",Titulo="A Hora da Estrela", quantidade=1, ano=1977},
-               new ModeloLivros{Id=12,autor ="Rachel de Queiroz",Titulo="O Quinze", quantidade=1, ano=1930},
-               new ModeloLivros{Id=13,autor ="José Lins do Rego",Titulo="Menino do Engenho", quantidade=5, ano= 1932},
-               new ModeloLivros{Id=14,autor ="João Guimarães Rosa",Titulo="Sagarana", quantidade=3, ano =1946},
-               new ModeloLivros{Id=15,autor ="José Lins do Rego",Titulo="Fogo Morto", quantidade=1, ano = 1943},
-
+            new ModeloLivros{Id=1, Autor ="Dom Casmurro",Titulo="Machado de Assis", quantidade=2, ano = 1899},
+            new ModeloLivros{Id=2,Autor ="Memórias Póstumas de Brás Cubas",Titulo="Machado de Assis", quantidade=2, ano= 1881},
+            new ModeloLivros{Id=3,Autor ="João Guimarães Rosa",Titulo="Grande Sertão: Veredas", quantidade=4,ano= 1956},
+            new ModeloLivros{Id=4,Autor ="Aluísio Azevedo",Titulo="O Cortiço", quantidade=4, ano= 1890},
+            new ModeloLivros{Id=5,Autor ="José de Alencar",Titulo="Iracema", quantidade=1, ano =1865},
+            new ModeloLivros{Id=6,Autor ="Mário de Andrade",Titulo="Macunaíma", quantidade=11, ano=1928},
+            new ModeloLivros{Id=7,Autor ="Jorge Amado",Titulo="Capitães da Areia", quantidade=2, ano = 1937},
+            new ModeloLivros{Id=8,Autor ="Graciliano Ramos",Titulo="Vidas Secas", quantidade=9, ano=1938},
+            new ModeloLivros{Id=9,Autor ="Joaquim Manuel de Macedo",Titulo="A Moreninha", quantidade=2, ano=1844},
+            new ModeloLivros{Id=10,Autor ="Erico Verissimo",Titulo="O Tempo e o Vento", quantidade=1, ano =1949},
+            new ModeloLivros{Id=11,Autor ="Clarice Lispector",Titulo="A Hora da Estrela", quantidade=1, ano=1977},
+            new ModeloLivros{Id=12,Autor ="Rachel de Queiroz",Titulo="O Quinze", quantidade=1, ano=1930},
+            new ModeloLivros{Id=13,Autor ="José Lins do Rego",Titulo="Menino do Engenho", quantidade=5, ano= 1932},
+            new ModeloLivros{Id=14,Autor ="João Guimarães Rosa",Titulo="Sagarana", quantidade=3, ano =1946},
+            new ModeloLivros{Id=15,Autor ="José Lins do Rego",Titulo="Fogo Morto", quantidade=1, ano = 1943},
         };
-        [HttpPost]
-        public ActionResult<List<ModeloLivros>> AdicionarLivro(ModeloLivros novoLivros)
-        {
-            if (novoLivros.Id == 0 && livros.Count > 0)
-                novoLivros.Id = livros[livros.Count - 1].Id + 1;
+        private static List<Aluguel> alugueis = new List<Aluguel>() { };
 
-            livros.Add(novoLivros);
-            return Ok(livros);
 
-        }
         [HttpGet]
         public ActionResult<List<ModeloLivros>> ListaLivros()
         {
@@ -46,87 +40,100 @@ namespace trabalho.Controllers
         }
 
 
-        [HttpPost("alugar/{Titulo}")]
-        public ActionResult AlugarPorTitulo(string Titulo)
+        [HttpPost("alugar/{livroId}")]
+        public ActionResult AlugarLivro(int livroId, [FromBody] AluguelRequest request)
         {
 
-            var encontarlivro = livros.Find(l => l.Titulo == Titulo);
-
-            if (encontarlivro == null)
+            var encontrarLivro = livros.Find(l => l.Id == livroId);
+     
+            if (encontrarLivro == null)
             {
                 return NotFound("livro não encontrado");
             }
-            if (encontarlivro.alugar == true)
+
+            if (encontrarLivro.quantidade <= 0)
             {
-                return NotFound("Este livro já está alugado");
-
-            }
-            if (encontarlivro.alugar = true) ;
-
-            {
-                return Ok($"{encontarlivro.Titulo} foi alugado com sucesso!!!! ");
-
+                return BadRequest("Não há exemplares disponíveis para aluguel no momento.");
             }
 
+            var alugado = alugueis.Find(a => a.livroId == livroId);
 
+            if (alugado != null) {
+                if (alugado.Nome == request.Nome)
+                {
+                    return BadRequest($"O usuário {request.Nome} já alugou esse livro.");
+                }
+            }
+            var novoAluguel = new Aluguel { };
 
+            novoAluguel.Id = alugueis.Count > 0 ? alugueis[alugueis.Count - 1].Id + 1 : 1;
+            novoAluguel.Nome = request.Nome;
+            novoAluguel.AnoNascimento = request.AnoNascimento;
+            novoAluguel.livroId = livroId;
+            novoAluguel.criado_em = DateTime.Now;
+            novoAluguel.devolvido_em = null;
+            
+            alugueis.Add(novoAluguel);
 
+            encontrarLivro.quantidade--;
 
+            return Created();
         }
 
-        [HttpPost("devolver/{titulo}")]
-        public ActionResult DevolverLivros(string titulo)
+        [HttpPost("devolver/{aluguelId}")]
+        public ActionResult DevolverLivros(int aluguelId)
         {
-            var devolverlivri = livros.Find(l => l.Titulo == titulo);
+            var devolverLivro = alugueis.Find(l => l.Id == aluguelId);
 
-            if (devolverlivri == null)
+            if (devolverLivro == null)
             {
-                return NotFound("não econtado");
+                return NotFound("Aluguel não encontrado.");
             }
 
-            if (devolverlivri.alugar == false)
+            if (devolverLivro.devolvido_em != null)
             {
-                return NotFound("livro não alugadod");
+                return BadRequest("Livro já devolvido.");
             }
-            devolverlivri.alugar = false;
 
-            devolverlivri.quantidade++;
+            var livroDevolucao = livros.Find(r => r.Id == devolverLivro.livroId);
 
-            return Ok($"Livro '{devolverlivri.Titulo}' devolvido com sucesso.");
+            if (livroDevolucao == null)
+            {
+                return NotFound("Livro não encontrado.");
+            }
+
+            livroDevolucao.quantidade++;
+            devolverLivro.devolvido_em = DateTime.Now;
+
+            return Created();
         }
 
 
         [HttpGet("alugados")]
-        public ActionResult<List<ModeloLivros>> LivrosAlugados()
+        public ActionResult<List<object>> LivrosAlugados()
         {
-            var encontraalugado = livros.FindAll(l => l.alugar);
-
-
-            if (encontraalugado.Count == 0)
+            var alugueisComDetalhes = alugueis.Select(aluguel =>
             {
-                return NotFound("Não há livros alugados agora ");
-            }
-            return Ok(encontraalugado);
+                var livro = livros.FirstOrDefault(l => l.Id == aluguel.livroId);
+                if (livro != null)
+                {
+                    return new
+                    {
+                        aluguel.Id,
+                        aluguel.Nome,
+                        aluguel.AnoNascimento,
+                        LivroTitulo = livro.Titulo,
+                        LivroAno = livro.ano,
+                        aluguel.criado_em,
+                        aluguel.devolvido_em
+                    };
+                }
+                return null;
+            }).Where(a => a != null)
+            .OrderBy(a => a.devolvido_em)
+            .ToList();
 
-
-
-
+            return Ok(alugueisComDetalhes);
         }
-
-
-
-
-
-
-
-
-
-
-
     }
-
-
-
-
-
 }
